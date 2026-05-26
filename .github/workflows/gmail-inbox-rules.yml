@@ -1,0 +1,34 @@
+name: Gmail Inbox Rules
+
+on:
+  schedule:
+    # Asia/Tokyo 07:00 = UTC 22:00 on the previous day.
+    - cron: "0 22 * * *"
+  workflow_dispatch:
+
+jobs:
+  gmail-inbox-rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Gmail inbox rules
+        env:
+          GMAIL_TOKEN_JSON_B64: ${{ secrets.GMAIL_TOKEN_JSON_B64 }}
+          # 初回は true でログ確認し、問題なければ false に変更する運用を推奨。
+          DRY_RUN: "false"
+          LOOKBACK_DAYS: "2"
+          MAX_MESSAGES: "300"
+          TRASH_NON_IMPORTANT: "true"
+        run: python scripts/gmail_inbox_rules.py
